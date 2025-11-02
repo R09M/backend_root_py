@@ -1,0 +1,27 @@
+# Python 패키지 의존성
+
+# GPIO 제어
+RPi.GPIO==0.7.1
+
+# DHT22 온습도 센서
+adafruit-circuitpython-dht==3.7.8
+adafruit-blinka==8.20.0
+
+# SPI 통신 (MCP3008 ADC)
+spidev==3.6
+
+# 데이터베이스 (MariaDB)
+pymysql==1.0.2
+
+# WebSocket 실시간 통신
+websockets==12.0
+
+# 표준 라이브러리 (Python 3.11 기본 포함)
+# - json
+# - datetime
+# - time
+# - threading
+# - signal
+# - sys
+# - asyncio
+# - queue
