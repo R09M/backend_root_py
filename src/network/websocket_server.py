@@ -8,9 +8,9 @@ from queue import Queue
 import websockets
 import RPi.GPIO as GPIO
                                                                 # 로컬 모듈
-import sensor.multi_sensor as multi_sensor
-import control.multi_control as multi_control
-from config.config_manager import ConfigManager
+import multi_sensor
+import multi_control
+from config_manager import ConfigManager
 
 # 웹소켓 서버 설정
 WS_HOST = '0.0.0.0'                                        # 모든 네트워크 인터페이스에서 접속 허용
@@ -234,26 +234,51 @@ async def set_mode(websocket, data) :
     device = data.get('device')
     mode = data.get('mode')
 
-    # 모든 장치 모드 변경
+    # 자동 모드 변경
     if device == 'all' :
       success = True
       for dev in ['led', 'fan', 'pump'] :
         if not config.set_device_mode(dev, mode) :
           success = False
     
-    # 개별 장치 모드 변경
+    # 수동 모드 변경
     else :
       success = config.set_device_mode(device, mode)
+
+    # 자동/수동 모드별 추가 처리
+    control_result = None
+    device_status = None
+
+    # 자동 모드로 전환 시 : 즉시 제어 실행
+    if mode == 'auto' and success :
+      control_result = auto_control()
+
+    # 수동 모드로 전환 시 : 현재 제어 상태 전송
+    elif mode == 'manual' and success :
+      device_status = multi_control.get_device_status()
+      
+      if device_status :
+        led_mode = config.get_device_mode('led')
+        fan_mode = config.get_device_mode('fan')
+        pump_mode = config.get_device_mode('pump')
+        
+        device_status = {
+          'led' : {'status' : device_status['led'], 'mode': led_mode},
+          'fan' : {'status' : device_status['fan'], 'mode': fan_mode},
+          'pump' : {'status' : device_status['pump'], 'mode': pump_mode}
+        }
 
     response = make_response(
       'set_mode',
       status = 'success' if success else 'error',
       device = device,
-      mode = mode
+      mode = mode,
+      control_result = control_result,
+      device_status = device_status
     )
 
     if not success :
-        response['message'] = '모드 변경 실패'
+      response['message'] = '모드 변경 실패'
         
     await websocket.send(json.dumps(response, ensure_ascii = False))
 
@@ -293,6 +318,57 @@ def auto_control() :
   except Exception as e :
     print(f"[{current_time()}] 즉시 제어 오류 : {e}")
     return {'error' : str(e)}
+  
+# 현재 제어 상태 조회 명령 처리
+async def get_device_status(websocket) :
+  try :
+    print(f"[{current_time()}] 제어 상태 조회 요청")
+    
+    # multi_control에서 현재 상태 가져오기
+    device_status = multi_control.get_device_status()
+    
+    if device_status is None :
+      await send_error(websocket, 'get_device_status', '제어 상태 조회 실패')
+      return
+    
+    # 현재 모드 가져오기
+    led_mode = config.get_device_mode('led')
+    fan_mode = config.get_device_mode('fan')
+    pump_mode = config.get_device_mode('pump')
+
+    device_list = [
+      ('led', device_status['led']),
+      ('fan', device_status['fan']),
+      ('pump', device_status['pump'])
+    ]
+
+    multi_control.print_control_status(device_list, None, 'auto')
+    
+    response = make_response(
+      'get_device_status',
+      data = {
+        'led' : {
+          'status' : device_status['led'],
+          'mode' : led_mode
+        },
+        'fan' : {
+          'status' : device_status['fan'],
+          'mode' : fan_mode
+        },
+        'pump' : {
+          'status' : device_status['pump'],
+          'mode' : pump_mode
+        }
+      },
+      created_at = datetime_stamp()
+    )
+    
+    await websocket.send(json.dumps(response, ensure_ascii = False))
+    print(f"[{current_time()}] 제어 상태 전송 완료\n")
+  
+  except Exception as e :
+    print(f"[{current_time()}] 제어 상태 조회 오류 : {e}")
+    await send_error(websocket, 'get_device_status', e)
 
 # 시스템 알림 확인 및 전송 (대기 시간 : 0.5초)
 async def alert_monitor() :
@@ -346,6 +422,9 @@ async def handle_client(websocket, path) :
 
         elif command == 'set_mode' :
           await set_mode(websocket, data)
+
+        elif command == 'get_device_status' :
+          await get_device_status(websocket)
         
         else :
           await send_error(websocket, command, '알 수 없는 명령')

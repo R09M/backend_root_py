@@ -5,10 +5,10 @@ from datetime import datetime
                                                                 # 외부 라이브러리
 import RPi.GPIO as GPIO
                                                                 # 로컬 모듈
-from config.constant import SETTINGS
-from sensor.multi_sensor import get_light_value, get_temperature, get_soil_moisture
-from database.db_utils import save_control
-from config.config_manager import ConfigManager
+from constant import SETTINGS
+from multi_sensor import get_light_value, get_temperature, get_soil_moisture
+from db_utils import save_control
+from config_manager import ConfigManager
 
 # 설정 관리자 전역 변수
 config_manager = None
@@ -271,6 +271,29 @@ def control_all_devices(sensor_data = None) :
     )
 
   return results
+
+# 현재 장치 상태 조회 함수
+def get_device_status() :
+  try :
+    # 현재 GPIO 핀 상태 읽기
+    led_state = GPIO.input(LED_PIN)
+    fan_state = GPIO.input(FAN_PIN)
+    pump_state = GPIO.input(PUMP_PIN)
+    
+    # GPIO 상태를 ON/OFF로 변환
+    led_status = 'ON' if led_state == GPIO.HIGH else 'OFF'
+    fan_status = 'ON' if fan_state == GPIO.LOW else 'OFF'
+    pump_status = 'ON' if pump_state == GPIO.LOW else 'OFF'
+    
+    return {
+      'led' : led_status,
+      'fan' : fan_status,
+      'pump' : pump_status
+    }
+  
+  except Exception as e :
+    print(f"장치 상태 조회 오류 : {e}")
+    return None
 
 # 프로그램 종료 시 리소스 정리
 def cleanup() :
