@@ -1,6 +1,6 @@
 # 🌱 라즈베리파이, 파이썬 기반 스마트팜 IoT 기기 개발 및 빅데이터 수집 알고리즘 개발
 
-[![Notion](https://img.shields.io/badge/Notion-Details-F7F6F3?style=flat&logo=notion&logoColor=000000)](https://is.gd/NLSbOP)
+[![Notion](https://img.shields.io/badge/Notion-Details-F7F6F3?style=flat&logo=notion&logoColor=000000)](https://is.gd/2g9twj)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-4-A22846?style=flat&logo=raspberrypi&logoColor=white)](https://www.raspberrypi.org/)
 [![MariaDB](https://img.shields.io/badge/MariaDB-10.x-003545?style=flat&logo=mariadb&logoColor=white)](https://mariadb.org/)
@@ -20,7 +20,7 @@
 
 ## 📌 프로젝트 개요
 
-**개발 기간** : 2025.09.15 ~ 2025.10.31 (47일)
+**개발 기간** : 2025.09.15 ~ 2025.11.10 (57일)
 
 **프로젝트 목표** : 농작물 생육을 위한 IoT 기반 환경 모니터링 및 자동 제어 시스템 구축
 
@@ -81,6 +81,8 @@ WebSocket 기반 양방향 통신으로 모바일 앱에서 센서 데이터를 
 - 안전한 리소스 정리 및 종료 처리
 
 ## 🔧 기술 스택
+
+![회로도](./images/circuit_diagram.png)
 
 ### 하드웨어
 - **메인보드** : Raspberry Pi 4
